@@ -1,4 +1,4 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -17,9 +17,9 @@ void main() {
     expect(-a, const FractionalOffset(-0.5, -0.25));
     expect(a - b, const FractionalOffset(-0.75, -0.5));
     expect(a + b, const FractionalOffset(1.75, 1.0));
-    expect(a * 2.0, const FractionalOffset(1.0, 0.5));
+    expect(a * 2.0, FractionalOffset.centerRight);
     expect(a / 2.0, const FractionalOffset(0.25, 0.125));
-    expect(a ~/ 2.0, const FractionalOffset(0.0, 0.0));
+    expect(a ~/ 2.0, FractionalOffset.topLeft);
     expect(a % 5.0, const FractionalOffset(0.5, 0.25));
   });
 
@@ -39,7 +39,7 @@ void main() {
   });
 
   test('FractionalOffset.fromOffsetAndRect()', () {
-    final FractionalOffset a = FractionalOffset.fromOffsetAndRect(const Offset(150.0, 120.0), Rect.fromLTWH(50.0, 20.0, 200.0, 400.0));
+    final FractionalOffset a = FractionalOffset.fromOffsetAndRect(const Offset(150.0, 120.0), const Rect.fromLTWH(50.0, 20.0, 200.0, 400.0));
     expect(a, const FractionalOffset(0.5, 0.25));
   });
 }

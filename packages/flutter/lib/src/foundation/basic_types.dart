@@ -1,8 +1,7 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:async';
 import 'dart:collection';
 
 // COMMON SIGNATURES
@@ -11,7 +10,9 @@ export 'dart:ui' show VoidCallback;
 
 /// Signature for callbacks that report that an underlying value has changed.
 ///
-/// See also [ValueSetter].
+/// See also:
+///
+///  * [ValueSetter], for callbacks that report that a value has been set.
 typedef ValueChanged<T> = void Function(T value);
 
 /// Signature for callbacks that report that a value has been set.
@@ -66,69 +67,6 @@ typedef AsyncValueSetter<T> = Future<void> Function(T value);
 ///  * [AsyncValueSetter], the setter equivalent of this signature.
 typedef AsyncValueGetter<T> = Future<T> Function();
 
-
-// BITFIELD
-
-/// The largest SMI value.
-///
-/// See <https://www.dartlang.org/articles/numeric-computation/#smis-and-mints>
-const int kMaxUnsignedSMI = 0x3FFFFFFFFFFFFFFF;
-
-/// A BitField over an enum (or other class whose values implement "index").
-/// Only the first 62 values of the enum can be used as indices.
-class BitField<T extends dynamic> {
-  /// Creates a bit field of all zeros.
-  ///
-  /// The given length must be at most 62.
-  BitField(this._length)
-    : assert(_length <= _smiBits),
-      _bits = _allZeros;
-
-  /// Creates a bit field filled with a particular value.
-  ///
-  /// If the value argument is true, the bits are filled with ones. Otherwise,
-  /// the bits are filled with zeros.
-  ///
-  /// The given length must be at most 62.
-  BitField.filled(this._length, bool value)
-    : assert(_length <= _smiBits),
-      _bits = value ? _allOnes : _allZeros;
-
-  final int _length;
-  int _bits;
-
-  static const int _smiBits = 62; // see https://www.dartlang.org/articles/numeric-computation/#smis-and-mints
-  static const int _allZeros = 0;
-  static const int _allOnes = kMaxUnsignedSMI; // 2^(_kSMIBits+1)-1
-
-  /// Returns whether the bit with the given index is set to one.
-  bool operator [](T index) {
-    assert(index.index < _length);
-    return (_bits & 1 << index.index) > 0;
-  }
-
-  /// Sets the bit with the given index to the given value.
-  ///
-  /// If value is true, the bit with the given index is set to one. Otherwise,
-  /// the bit is set to zero.
-  void operator []=(T index, bool value) {
-    assert(index.index < _length);
-    if (value)
-      _bits = _bits | (1 << index.index);
-    else
-      _bits = _bits & ~(1 << index.index);
-  }
-
-  /// Sets all the bits to the given value.
-  ///
-  /// If the value is true, the bits are all set to one. Otherwise, the bits are
-  /// all set to zero. Defaults to setting all the bits to zero.
-  void reset([ bool value = false ]) {
-    _bits = value ? _allOnes : _allZeros;
-  }
-}
-
-
 // LAZY CACHING ITERATOR
 
 /// A lazy caching version of [Iterable].
@@ -151,7 +89,7 @@ class BitField<T extends dynamic> {
 ///
 ///  * It requires more memory than a non-caching iterator.
 ///
-///  * the [length] and [toList] properties immediately precache the
+///  * The [length] and [toList] properties immediately pre-cache the
 ///    entire list. Using these fields therefore loses the laziness of
 ///    the iterable. However, it still gets cached.
 ///
@@ -198,17 +136,17 @@ class CachingIterable<E> extends IterableBase<E> {
   }
 
   @override
-  Iterable<T> map<T>(T f(E e)) {
+  Iterable<T> map<T>(T Function(E e) f) {
     return CachingIterable<T>(super.map<T>(f).iterator);
   }
 
   @override
-  Iterable<E> where(bool test(E element)) {
+  Iterable<E> where(bool Function(E element) test) {
     return CachingIterable<E>(super.where(test).iterator);
   }
 
   @override
-  Iterable<T> expand<T>(Iterable<T> f(E element)) {
+  Iterable<T> expand<T>(Iterable<T> Function(E element) f) {
     return CachingIterable<T>(super.expand<T>(f).iterator);
   }
 
@@ -218,7 +156,7 @@ class CachingIterable<E> extends IterableBase<E> {
   }
 
   @override
-  Iterable<E> takeWhile(bool test(E value)) {
+  Iterable<E> takeWhile(bool Function(E value) test) {
     return CachingIterable<E>(super.takeWhile(test).iterator);
   }
 
@@ -228,7 +166,7 @@ class CachingIterable<E> extends IterableBase<E> {
   }
 
   @override
-  Iterable<E> skipWhile(bool test(E value)) {
+  Iterable<E> skipWhile(bool Function(E value) test) {
     return CachingIterable<E>(super.skipWhile(test).iterator);
   }
 
@@ -266,7 +204,7 @@ class _LazyListIterator<E> implements Iterator<E> {
   E get current {
     assert(_index >= 0); // called "current" before "moveNext()"
     if (_index < 0 || _index == _owner._results.length)
-      return null;
+      throw StateError('current can not be call after moveNext has returned false');
     return _owner._results[_index];
   }
 
@@ -300,3 +238,9 @@ class Factory<T> {
   }
 }
 
+/// Linearly interpolate between two `Duration`s.
+Duration lerpDuration(Duration a, Duration b, double t) {
+  return Duration(
+    microseconds: (a.inMicroseconds + (b.inMicroseconds - a.inMicroseconds) * t).round(),
+  );
+}

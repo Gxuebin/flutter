@@ -1,4 +1,4 @@
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -11,10 +11,12 @@ import 'package:flutter_driver/driver_extension.dart';
 void main() {
   enableFlutterDriverExtension();
   debugPrint('Application starting...');
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({Key key}) : super(key: key);
+
   @override
   State createState() => MyAppState();
 }
@@ -47,11 +49,11 @@ Widget builds: $_widgetBuilds''';
         _summary = 'Producing texture frames at .5x speed...';
         _state = FrameState.slow;
         _icon = Icons.stop;
-        channel.invokeMethod('start', _flutterFrameRate ~/ 2);
+        channel.invokeMethod<void>('start', _flutterFrameRate ~/ 2);
         break;
       case FrameState.slow:
         debugPrint('Stopping .5x speed test...');
-        await channel.invokeMethod('stop');
+        await channel.invokeMethod<void>('stop');
         await _summarizeStats();
         _icon = Icons.fast_forward;
         _state = FrameState.afterSlow;
@@ -62,11 +64,11 @@ Widget builds: $_widgetBuilds''';
         _summary = 'Producing texture frames at 2x speed...';
         _state = FrameState.fast;
         _icon = Icons.stop;
-        channel.invokeMethod('start', (_flutterFrameRate * 2).toInt());
+        channel.invokeMethod<void>('start', (_flutterFrameRate * 2).toInt());
         break;
       case FrameState.fast:
         debugPrint('Stopping 2x speed test...');
-        await channel.invokeMethod('stop');
+        await channel.invokeMethod<void>('stop');
         await _summarizeStats();
         _state = FrameState.afterFast;
         _icon = Icons.replay;
@@ -134,10 +136,10 @@ Press play to produce texture frames.''';
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Container(
+              const SizedBox(
                 width: 300.0,
                 height: 200.0,
-                child: const Texture(textureId: 0),
+                child: Texture(textureId: 0),
               ),
               Container(
                 width: 300.0,

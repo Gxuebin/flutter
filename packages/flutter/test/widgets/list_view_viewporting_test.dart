@@ -1,4 +1,4 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -24,7 +24,7 @@ void main() {
           left: ListView.builder(
             itemBuilder: (BuildContext context, int index) {
               callbackTracker.add(index);
-              return Container(
+              return SizedBox(
                 key: ValueKey<int>(index),
                 height: 100.0,
                 child: Text('$index'),
@@ -42,7 +42,7 @@ void main() {
 
     expect(callbackTracker, equals(<int>[
       0, 1, 2, 3, 4, 5, // visible
-      6, 7, 8 // in cached area
+      6, 7, 8, // in cached area
     ]));
 
     callbackTracker.clear();
@@ -68,15 +68,15 @@ void main() {
     // so if our widget is 200 pixels tall, it should fit exactly 3 times.
     // but if we are offset by 300 pixels, there will be 4, numbered 1-4.
 
-    final IndexedWidgetBuilder itemBuilder = (BuildContext context, int index) {
+    Widget itemBuilder(BuildContext context, int index) {
       callbackTracker.add(index);
-      return Container(
+      return SizedBox(
         key: ValueKey<int>(index),
         width: 500.0, // this should be ignored
         height: 200.0,
         child: Text('$index', textDirection: TextDirection.ltr),
       );
-    };
+    }
 
     Widget builder() {
       return Directionality(
@@ -109,7 +109,7 @@ void main() {
     expect(callbackTracker, equals(<int>[
       0, 1, 2,
       3, 4, 5, //visible
-      6, 7
+      6, 7,
     ]));
     callbackTracker.clear();
 
@@ -120,8 +120,7 @@ void main() {
       1, 2,
       3, 4, 5, // visible
       6, 7,
-    ]
-    ));
+    ]));
     callbackTracker.clear();
   });
 
@@ -132,15 +131,15 @@ void main() {
     // so if our widget is 200 pixels wide, it should fit exactly 4 times.
     // but if we are offset by 300 pixels, there will be 5, numbered 1-5.
 
-    final IndexedWidgetBuilder itemBuilder = (BuildContext context, int index) {
+    Widget itemBuilder(BuildContext context, int index) {
       callbackTracker.add(index);
-      return Container(
+      return SizedBox(
         key: ValueKey<int>(index),
         height: 500.0, // this should be ignored
         width: 200.0,
         child: Text('$index', textDirection: TextDirection.ltr),
       );
-    };
+    }
 
     Widget builder() {
       return Directionality(
@@ -181,17 +180,17 @@ void main() {
 
   testWidgets('ListView reinvoke builders', (WidgetTester tester) async {
     final List<int> callbackTracker = <int>[];
-    final List<String> text = <String>[];
+    final List<String?> text = <String?>[];
 
-    final IndexedWidgetBuilder itemBuilder = (BuildContext context, int index) {
+    Widget itemBuilder(BuildContext context, int index) {
       callbackTracker.add(index);
-      return Container(
+      return SizedBox(
         key: ValueKey<int>(index),
         width: 500.0, // this should be ignored
         height: 220.0,
-        child: Text('$index', textDirection: TextDirection.ltr)
+        child: Text('$index', textDirection: TextDirection.ltr),
       );
-    };
+    }
 
     void collectText(Widget widget) {
       if (widget is Text)
@@ -231,10 +230,10 @@ void main() {
   });
 
   testWidgets('ListView reinvoke builders', (WidgetTester tester) async {
-    StateSetter setState;
+    late StateSetter setState;
     ThemeData themeData = ThemeData.light();
 
-    final IndexedWidgetBuilder itemBuilder = (BuildContext context, int index) {
+    Widget itemBuilder(BuildContext context, int index) {
       return Container(
         key: ValueKey<int>(index),
         width: 500.0, // this should be ignored
@@ -242,7 +241,7 @@ void main() {
         color: Theme.of(context).primaryColor,
         child: Text('$index', textDirection: TextDirection.ltr),
       );
-    };
+    }
 
     final Widget viewport = ListView.builder(
       itemBuilder: itemBuilder,
@@ -260,9 +259,8 @@ void main() {
       ),
     );
 
-    DecoratedBox widget = tester.firstWidget(find.byType(DecoratedBox));
-    BoxDecoration decoration = widget.decoration;
-    expect(decoration.color, equals(Colors.blue));
+    Container widget = tester.firstWidget(find.byType(Container));
+    expect(widget.color, equals(Colors.blue));
 
     setState(() {
       themeData = ThemeData(primarySwatch: Colors.green);
@@ -270,13 +268,12 @@ void main() {
 
     await tester.pump();
 
-    widget = tester.firstWidget(find.byType(DecoratedBox));
-    decoration = widget.decoration;
-    expect(decoration.color, equals(Colors.green));
+    widget = tester.firstWidget(find.byType(Container));
+    expect(widget.color, equals(Colors.green));
   });
 
   testWidgets('ListView padding', (WidgetTester tester) async {
-    final IndexedWidgetBuilder itemBuilder = (BuildContext context, int index) {
+    Widget itemBuilder(BuildContext context, int index) {
       return Container(
         key: ValueKey<int>(index),
         width: 500.0, // this should be ignored
@@ -284,7 +281,7 @@ void main() {
         color: Colors.green[500],
         child: Text('$index', textDirection: TextDirection.ltr),
       );
-    };
+    }
 
     await tester.pumpWidget(
       Directionality(
@@ -320,28 +317,30 @@ void main() {
 
     final RenderSliverList list = tester.renderObject(find.byType(SliverList));
 
-    expect(list.indexOf(list.firstChild), equals(0));
-    expect(list.indexOf(list.lastChild), equals(2));
-    expect(list.childScrollOffset(list.firstChild), equals(0.0));
-    expect(list.geometry.scrollExtent, equals(300.0));
+    expect(list.indexOf(list.firstChild!), equals(0));
+    expect(list.indexOf(list.lastChild!), equals(2));
+    expect(list.childScrollOffset(list.firstChild!), equals(0.0));
+    expect(list.geometry!.scrollExtent, equals(300.0));
 
     expect(list, hasAGoodToStringDeep);
     expect(
       list.toStringDeep(minLevel: DiagnosticLevel.info),
       equalsIgnoringHashCodes(
         'RenderSliverList#00000 relayoutBoundary=up1\n'
+        ' │ needs compositing\n'
         ' │ parentData: paintOffset=Offset(0.0, 0.0) (can use size)\n'
         ' │ constraints: SliverConstraints(AxisDirection.down,\n'
         ' │   GrowthDirection.forward, ScrollDirection.idle, scrollOffset:\n'
         ' │   0.0, remainingPaintExtent: 600.0, crossAxisExtent: 800.0,\n'
         ' │   crossAxisDirection: AxisDirection.right,\n'
-        ' │   viewportMainAxisExtent: 600.0, remainingCacheExtent: 850.0\n'
-        ' │   cacheOrigin: 0.0 )\n'
+        ' │   viewportMainAxisExtent: 600.0, remainingCacheExtent: 850.0,\n'
+        ' │   cacheOrigin: 0.0)\n'
         ' │ geometry: SliverGeometry(scrollExtent: 300.0, paintExtent: 300.0,\n'
         ' │   maxPaintExtent: 300.0, cacheExtent: 300.0)\n'
         ' │ currently live children: 0 to 2\n'
         ' │\n'
         ' ├─child with index 0: RenderRepaintBoundary#00000 relayoutBoundary=up2\n'
+        ' │ │ needs compositing\n'
         ' │ │ parentData: index=0; layoutOffset=0.0 (can use size)\n'
         ' │ │ constraints: BoxConstraints(w=800.0, 0.0<=h<=Infinity)\n'
         ' │ │ layer: OffsetLayer#00000\n'
@@ -370,6 +369,7 @@ void main() {
         ' │         additionalConstraints: BoxConstraints(biggest)\n'
         ' │\n'
         ' ├─child with index 1: RenderRepaintBoundary#00000 relayoutBoundary=up2\n'
+        ' │ │ needs compositing\n'
         ' │ │ parentData: index=1; layoutOffset=100.0 (can use size)\n'
         ' │ │ constraints: BoxConstraints(w=800.0, 0.0<=h<=Infinity)\n'
         ' │ │ layer: OffsetLayer#00000\n'
@@ -398,6 +398,7 @@ void main() {
         ' │         additionalConstraints: BoxConstraints(biggest)\n'
         ' │\n'
         ' └─child with index 2: RenderRepaintBoundary#00000 relayoutBoundary=up2\n'
+        '   │ needs compositing\n'
         '   │ parentData: index=2; layoutOffset=200.0 (can use size)\n'
         '   │ constraints: BoxConstraints(w=800.0, 0.0<=h<=Infinity)\n'
         '   │ layer: OffsetLayer#00000\n'
@@ -439,23 +440,23 @@ void main() {
         Directionality(
             textDirection: TextDirection.ltr,
             child: Center(
-              child: Container(
+              child: SizedBox(
                   height: 200.0,
                   child: ListView(
                     cacheExtent: 500.0,
                     controller: ScrollController(initialScrollOffset: 300.0),
-                    children: <Widget>[
-                      Container(height: 140.0, child: text),
-                      Container(height: 160.0, child: text),
-                      Container(height: 90.0, child: text),
-                      Container(height: 110.0, child: text),
-                      Container(height: 80.0, child: text),
-                      Container(height: 70.0, child: text),
+                    children: const <Widget>[
+                      SizedBox(height: 140.0, child: text),
+                      SizedBox(height: 160.0, child: text),
+                      SizedBox(height: 90.0, child: text),
+                      SizedBox(height: 110.0, child: text),
+                      SizedBox(height: 80.0, child: text),
+                      SizedBox(height: 70.0, child: text),
                     ],
-                  )
+                  ),
               ),
-            )
-        )
+            ),
+        ),
     );
 
     final RenderSliverList list = tester.renderObject(find.byType(SliverList));
@@ -466,7 +467,7 @@ void main() {
     await tester.pumpWidget(
         MaterialApp(
             home: Scaffold(
-                body: Container(
+                body: SizedBox(
                     height: 500.0,
                     child: CustomScrollView(
                       controller: ScrollController(initialScrollOffset: 120.0),
@@ -478,15 +479,15 @@ void main() {
                             delegate: ListView.builder(
                                 itemExtent: 100.0,
                                 itemCount: 100,
-                                itemBuilder: (_, __) => Container(
+                                itemBuilder: (_, __) => const SizedBox(
                                   height: 40.0,
-                                  child: const Text('hey'),
+                                  child: Text('hey'),
                                 )).childrenDelegate),
                       ],
-                    )
-                )
-            )
-        )
+                    ),
+                ),
+            ),
+        ),
     );
 
     final RenderObject renderObject = tester.renderObject(find.byType(Scrollable));
@@ -497,22 +498,21 @@ void main() {
     await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.rtl,
-          child: Container(
+          child: SizedBox(
             height: 200.0,
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 0.0, vertical: 0.0),
+              padding: EdgeInsets.zero,
               scrollDirection: Axis.horizontal,
               itemExtent: 200.0,
               itemCount: 10,
               itemBuilder: (_, int i) => Container(
                 height: 200.0,
                 width: 200.0,
-                color: i % 2 == 0 ? Colors.black : Colors.red,
+                color: i.isEven ? Colors.black : Colors.red,
               ),
             ),
           ),
-        )
+        ),
     );
 
     final RenderObject renderObject = tester.renderObject(find.byType(Scrollable));

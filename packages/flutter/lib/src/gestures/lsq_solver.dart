@@ -1,16 +1,24 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+
 
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
+
 // TODO(abarth): Consider using vector_math.
 class _Vector {
-  _Vector(int size) : _offset = 0, _length = size, _elements = Float64List(size);
+  _Vector(int size)
+    : _offset = 0,
+      _length = size,
+      _elements = Float64List(size);
 
   _Vector.fromVOL(List<double> values, int offset, int length)
-    : _offset = offset, _length = length, _elements = values;
+    : _offset = offset,
+      _length = length,
+      _elements = values;
 
   final int _offset;
 
@@ -36,8 +44,8 @@ class _Vector {
 // TODO(abarth): Consider using vector_math.
 class _Matrix {
   _Matrix(int rows, int cols)
-  : _columns = cols,
-    _elements = Float64List(rows * cols);
+    : _columns = cols,
+      _elements = Float64List(rows * cols);
 
   final int _columns;
   final List<double> _elements;
@@ -50,7 +58,7 @@ class _Matrix {
   _Vector getRow(int row) => _Vector.fromVOL(
     _elements,
     row * _columns,
-    _columns
+    _columns,
   );
 }
 
@@ -67,7 +75,7 @@ class PolynomialFit {
   /// An indicator of the quality of the fit.
   ///
   /// Larger values indicate greater quality.
-  double confidence;
+  late double confidence;
 }
 
 /// Uses the least-squares algorithm to fit a polynomial to a set of data.
@@ -89,7 +97,9 @@ class LeastSquaresSolver {
   final List<double> w;
 
   /// Fits a polynomial of the given degree to the data points.
-  PolynomialFit solve(int degree) {
+  ///
+  /// When there is not enough data to fit a curve null is returned.
+  PolynomialFit? solve(int degree) {
     if (degree > x.length) // Not enough data to fit a curve.
       return null;
 
@@ -123,7 +133,7 @@ class LeastSquaresSolver {
       }
 
       final double norm = q.getRow(j).norm();
-      if (norm < 0.000001) {
+      if (norm < precisionErrorTolerance) {
         // Vectors are linearly dependent or zero so no solution.
         return null;
       }
@@ -171,7 +181,7 @@ class LeastSquaresSolver {
       sumSquaredTotal += w[h] * w[h] * v * v;
     }
 
-    result.confidence = sumSquaredTotal <= 0.000001 ? 1.0 :
+    result.confidence = sumSquaredTotal <= precisionErrorTolerance ? 1.0 :
                           1.0 - (sumSquaredError / sumSquaredTotal);
 
     return result;

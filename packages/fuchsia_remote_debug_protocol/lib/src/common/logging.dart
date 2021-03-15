@@ -1,4 +1,4 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -50,12 +50,12 @@ typedef LoggingFunction = void Function(LogMessage log);
 ///   '[${log.levelName}]::${log.tag}--${log.time}: ${log.message}'
 ///
 /// Exits with status code 1 if the `log` is [LoggingLevel.severe].
-LoggingFunction defaultLoggingFunction = (LogMessage log) {
+void defaultLoggingFunction(LogMessage log) {
   print('[${log.levelName}]::${log.tag}--${log.time}: ${log.message}');
   if (log.level == LoggingLevel.severe) {
     exit(1);
   }
-};
+}
 
 /// Represents a logging message created by the logger.
 ///
@@ -69,9 +69,8 @@ class LogMessage {
   ///
   /// When this message is created, it sets its [time] to [DateTime.now].
   LogMessage(this.message, this.tag, this.level)
-      : levelName =
-            level.toString().substring(level.toString().indexOf('.') + 1),
-        time = DateTime.now();
+    : levelName = level.toString().substring(level.toString().indexOf('.') + 1),
+      time = DateTime.now();
 
   /// The actual log message.
   final String message;

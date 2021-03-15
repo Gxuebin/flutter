@@ -1,9 +1,8 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -24,7 +23,7 @@ void main() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Container(
+            SizedBox(
               height: 10.0,
               child: Semantics(
                 label: 'child1',
@@ -32,7 +31,7 @@ void main() {
                 selected: true,
               ),
             ),
-            Container(
+            SizedBox(
               height: 10.0,
               child: IgnorePointer(
                 ignoring: false,
@@ -57,13 +56,13 @@ void main() {
             TestSemantics(
               id: 2,
               label: 'child1',
-              rect: Rect.fromLTRB(0.0, 0.0, 800.0, 10.0),
+              rect: const Rect.fromLTRB(0.0, 0.0, 800.0, 10.0),
               flags: SemanticsFlag.isSelected.index,
             ),
             TestSemantics(
               id: 3,
               label: 'child2',
-              rect: Rect.fromLTRB(0.0, 0.0, 800.0, 10.0),
+              rect: const Rect.fromLTRB(0.0, 0.0, 800.0, 10.0),
               flags: SemanticsFlag.isSelected.index,
             ),
           ],
@@ -78,7 +77,7 @@ void main() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Container(
+            SizedBox(
               height: 10.0,
               child: Semantics(
                 label: 'child1',
@@ -86,7 +85,7 @@ void main() {
                 selected: true,
               ),
             ),
-            Container(
+            SizedBox(
               height: 10.0,
               child: IgnorePointer(
                 ignoring: true,
@@ -109,7 +108,7 @@ void main() {
           label: 'child1',
           rect: TestSemantics.fullScreen,
           flags: SemanticsFlag.isSelected.index,
-        )
+        ),
       ],
     )));
 
@@ -120,7 +119,7 @@ void main() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Container(
+            SizedBox(
               height: 10.0,
               child: Semantics(
                 label: 'child1',
@@ -128,7 +127,7 @@ void main() {
                 selected: true,
               ),
             ),
-            Container(
+            SizedBox(
               height: 10.0,
               child: IgnorePointer(
                 ignoring: false,
@@ -153,13 +152,13 @@ void main() {
             TestSemantics(
               id: 4,
               label: 'child1',
-              rect: Rect.fromLTRB(0.0, 0.0, 800.0, 10.0),
+              rect: const Rect.fromLTRB(0.0, 0.0, 800.0, 10.0),
               flags: SemanticsFlag.isSelected.index,
             ),
             TestSemantics(
               id: 3,
               label: 'child2',
-              rect: Rect.fromLTRB(0.0, 0.0, 800.0, 10.0),
+              rect: const Rect.fromLTRB(0.0, 0.0, 800.0, 10.0),
               flags: SemanticsFlag.isSelected.index,
             ),
           ],

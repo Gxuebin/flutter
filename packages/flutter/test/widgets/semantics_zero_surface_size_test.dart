@@ -1,9 +1,8 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -20,24 +19,24 @@ void main() {
     expect(semantics, hasSemantics(
       TestSemantics(
         id: 0,
-        rect: Rect.fromLTRB(0.0, 0.0, 2400.0, 1800.0),
+        rect: const Rect.fromLTRB(0.0, 0.0, 2400.0, 1800.0),
         children: <TestSemantics>[
           TestSemantics(
             id: 1,
-            rect: Rect.fromLTRB(0.0, 0.0, 800.0, 600.0),
+            rect: const Rect.fromLTRB(0.0, 0.0, 800.0, 600.0),
             flags: <SemanticsFlag>[SemanticsFlag.isSelected],
           ),
         ],
       ), ignoreTransform: true,
     ));
 
-    await tester.binding.setSurfaceSize(const Size(0.0, 0.0));
+    await tester.binding.setSurfaceSize(Size.zero);
     await tester.pumpAndSettle();
 
     expect(semantics, hasSemantics(
       TestSemantics(
         id: 0,
-        rect: Rect.fromLTRB(0.0, 0.0, 0.0, 0.0),
+        rect: Rect.zero,
       ), ignoreTransform: true,
     ));
 

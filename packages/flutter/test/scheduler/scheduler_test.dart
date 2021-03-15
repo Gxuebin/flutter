@@ -1,26 +1,41 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+
 import 'dart:async';
+import 'dart:ui' show window;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import '../flutter_test_alternative.dart';
+import 'scheduler_tester.dart';
 
-class TestSchedulerBinding extends BindingBase with ServicesBinding, SchedulerBinding { }
+class TestSchedulerBinding extends BindingBase with SchedulerBinding, ServicesBinding {
+  final Map<String, List<Map<String, dynamic>>> eventsDispatched = <String, List<Map<String, dynamic>>>{};
+
+  @override
+  void postEvent(String eventKind, Map<String, dynamic> eventData) {
+    getEventsDispatched(eventKind).add(eventData);
+  }
+
+  List<Map<String, dynamic>> getEventsDispatched(String eventKind) {
+    return eventsDispatched.putIfAbsent(eventKind, () => <Map<String, dynamic>>[]);
+  }
+}
 
 class TestStrategy {
   int allowedPriority = 10000;
 
-  bool shouldRunTaskWithPriority({ int priority, SchedulerBinding scheduler }) {
+  bool shouldRunTaskWithPriority({ required int priority, required SchedulerBinding scheduler }) {
     return priority >= allowedPriority;
   }
 }
 
 void main() {
-  SchedulerBinding scheduler;
+  late TestSchedulerBinding scheduler;
+
   setUpAll(() {
     scheduler = TestSchedulerBinding();
   });
@@ -102,10 +117,10 @@ void main() {
         scheduler.scheduleTask(() { taskExecuted = true; }, Priority.touch);
       },
       zoneSpecification: ZoneSpecification(
-        createTimer: (Zone self, ZoneDelegate parent, Zone zone, Duration duration, void f()) {
+        createTimer: (Zone self, ZoneDelegate parent, Zone zone, Duration duration, void Function() f) {
           // Don't actually run the tasks, just record that it was scheduled.
           timerQueueTasks.add(f);
-          return null;
+          return DummyTimer();
         },
       ),
     );
@@ -114,5 +129,123 @@ void main() {
     // events are locked.
     expect(timerQueueTasks.length, 2);
     expect(taskExecuted, false);
+
+    // Run the timers so that the scheduler is no longer in warm-up state.
+    for (final VoidCallback timer in timerQueueTasks) {
+      timer();
+    }
   });
+
+  test('Flutter.Frame event fired', () async {
+    window.onReportTimings!(<FrameTiming>[FrameTiming(
+      vsyncStart: 5000,
+      buildStart: 10000,
+      buildFinish: 15000,
+      rasterStart: 16000,
+      rasterFinish: 20000,
+    )]);
+
+    final List<Map<String, dynamic>> events = scheduler.getEventsDispatched('Flutter.Frame');
+    expect(events, hasLength(1));
+
+    final Map<String, dynamic> event = events.first;
+    expect(event['number'], isNonNegative);
+    expect(event['startTime'], 10000);
+    expect(event['elapsed'], 15000);
+    expect(event['build'], 5000);
+    expect(event['raster'], 4000);
+    expect(event['vsyncOverhead'], 5000);
+  });
+
+  test('TimingsCallback exceptions are caught', () {
+    FlutterErrorDetails? errorCaught;
+    FlutterError.onError = (FlutterErrorDetails details) {
+      errorCaught = details;
+    };
+    SchedulerBinding.instance!.addTimingsCallback((List<FrameTiming> timings) {
+      throw Exception('Test');
+    });
+    window.onReportTimings!(<FrameTiming>[]);
+    expect(errorCaught!.exceptionAsString(), equals('Exception: Test'));
+  });
+
+  test('currentSystemFrameTimeStamp is the raw timestamp', () {
+    // Undo epoch set by previous tests.
+    scheduler.resetEpoch();
+
+    late Duration lastTimeStamp;
+    late Duration lastSystemTimeStamp;
+
+    void frameCallback(Duration timeStamp) {
+      expect(timeStamp, scheduler.currentFrameTimeStamp);
+      lastTimeStamp = scheduler.currentFrameTimeStamp;
+      lastSystemTimeStamp = scheduler.currentSystemFrameTimeStamp;
+    }
+
+    scheduler.scheduleFrameCallback(frameCallback);
+    tick(const Duration(seconds: 2));
+    expect(lastTimeStamp, Duration.zero);
+    expect(lastSystemTimeStamp, const Duration(seconds: 2));
+
+    scheduler.scheduleFrameCallback(frameCallback);
+    tick(const Duration(seconds: 4));
+    expect(lastTimeStamp, const Duration(seconds: 2));
+    expect(lastSystemTimeStamp, const Duration(seconds: 4));
+
+    timeDilation = 2;
+    scheduler.scheduleFrameCallback(frameCallback);
+    tick(const Duration(seconds: 6));
+    expect(lastTimeStamp, const Duration(seconds: 2)); // timeDilation calls SchedulerBinding.resetEpoch
+    expect(lastSystemTimeStamp, const Duration(seconds: 6));
+
+    scheduler.scheduleFrameCallback(frameCallback);
+    tick(const Duration(seconds: 8));
+    expect(lastTimeStamp, const Duration(seconds: 3)); // 2s + (8 - 6)s / 2
+    expect(lastSystemTimeStamp, const Duration(seconds: 8));
+  });
+
+  test('Animation frame scheduled in the middle of the warm-up frame', () {
+    expect(scheduler.schedulerPhase, SchedulerPhase.idle);
+    final List<VoidCallback> timers = <VoidCallback>[];
+    final ZoneSpecification timerInterceptor = ZoneSpecification(
+      createTimer: (Zone self, ZoneDelegate parent, Zone zone, Duration duration, void Function() callback) {
+        timers.add(callback);
+        return DummyTimer();
+      },
+    );
+
+    // Schedule a warm-up frame.
+    // Expect two timers, one for begin frame, and one for draw frame.
+    runZoned<void>(scheduler.scheduleWarmUpFrame, zoneSpecification: timerInterceptor);
+    expect(timers.length, 2);
+    final VoidCallback warmUpBeginFrame = timers.first;
+    final VoidCallback warmUpDrawFrame = timers.last;
+    timers.clear();
+
+    warmUpBeginFrame();
+
+    // Simulate an animation frame firing between warm-up begin frame and warm-up draw frame.
+    // Expect a timer that reschedules the frame.
+    expect(scheduler.hasScheduledFrame, isFalse);
+    window.onBeginFrame!(Duration.zero);
+    expect(scheduler.hasScheduledFrame, isFalse);
+    window.onDrawFrame!();
+    expect(scheduler.hasScheduledFrame, isFalse);
+
+    // The draw frame part of the warm-up frame will run the post-frame
+    // callback that reschedules the engine frame.
+    warmUpDrawFrame();
+    expect(scheduler.hasScheduledFrame, isTrue);
+  });
+}
+
+class DummyTimer implements Timer {
+  @override
+  void cancel() {}
+
+  @override
+  bool get isActive => false;
+
+  @override
+  int get tick => 0;
 }

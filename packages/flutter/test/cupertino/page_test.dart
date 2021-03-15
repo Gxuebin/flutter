@@ -1,4 +1,4 @@
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -15,7 +15,7 @@ void main() {
             builder: (BuildContext context) {
               final String pageNumber = settings.name == '/' ? '1' : '2';
               return Center(child: Text('Page $pageNumber'));
-            }
+            },
           );
         },
       ),
@@ -40,6 +40,9 @@ void main() {
     // Page 2 is coming in from the right.
     expect(widget2TopLeft.dx, greaterThan(widget1InitialTopLeft.dx));
 
+    // Will need to be changed if the animation curve or duration changes.
+    expect(widget1TransientTopLeft.dx, moreOrLessEquals(130, epsilon: 1.0));
+
     await tester.pumpAndSettle();
 
     // Page 2 covers page 1.
@@ -61,6 +64,9 @@ void main() {
     expect(widget1InitialTopLeft.dy, equals(widget2TopLeft.dy));
     // Page 2 is leaving towards the right.
     expect(widget2TopLeft.dx, greaterThan(widget1InitialTopLeft.dx));
+
+    // Will need to be changed if the animation curve or duration changes.
+    expect(widget1TransientTopLeft.dx, moreOrLessEquals(249, epsilon: 1.0));
 
     await tester.pumpAndSettle();
 
@@ -85,7 +91,7 @@ void main() {
             builder: (BuildContext context) {
               final String pageNumber = settings.name == '/' ? '1' : '2';
               return Center(child: Text('Page $pageNumber'));
-            }
+            },
           );
         },
       ),
@@ -213,7 +219,7 @@ void main() {
             builder: (BuildContext context) {
               final String pageNumber = settings.name == '/' ? '1' : '2';
               return Center(child: Text('Page $pageNumber'));
-            }
+            },
           );
         },
       ),
@@ -222,7 +228,7 @@ void main() {
     tester.state<NavigatorState>(find.byType(Navigator)).pushNamed('/next');
 
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(seconds: 1));
 
     // Page 2 covers page 1.
     expect(find.text('Page 1'), findsNothing);
@@ -265,6 +271,98 @@ void main() {
     expect(find.text('Page 2'), isOnstage);
   });
 
+  testWidgets('test edge swipes work with media query padding (LTR)', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        builder: (BuildContext context, Widget? navigator) {
+          return MediaQuery(
+            data: const MediaQueryData(padding: EdgeInsets.only(left: 40)),
+            child: navigator!,
+          );
+        },
+        home: const Placeholder(),
+      ),
+    );
+
+    tester.state<NavigatorState>(find.byType(Navigator)).push(
+      CupertinoPageRoute<void>(
+        builder: (BuildContext context) => const Center(child: Text('Page 1')),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+
+    tester.state<NavigatorState>(find.byType(Navigator)).push(
+      CupertinoPageRoute<void>(
+        builder: (BuildContext context) => const Center(child: Text('Page 2')),
+      ),
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Page 1'), findsNothing);
+    expect(find.text('Page 2'), isOnstage);
+
+    // Now drag from the left edge.
+    final TestGesture gesture = await tester.startGesture(const Offset(35.0, 200.0));
+    await gesture.moveBy(const Offset(300.0, 0.0));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // Page 1 is now visible.
+    expect(find.text('Page 1'), isOnstage);
+    expect(find.text('Page 2'), isOnstage);
+  });
+
+  testWidgets('test edge swipes work with media query padding (RLT)', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        builder: (BuildContext context, Widget? navigator) {
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: MediaQuery(
+              data: const MediaQueryData(padding: EdgeInsets.only(right: 40)),
+              child: navigator!,
+            ),
+          );
+        },
+        home: const Placeholder(),
+      ),
+    );
+
+    tester.state<NavigatorState>(find.byType(Navigator)).push(
+      CupertinoPageRoute<void>(
+        builder: (BuildContext context) => const Center(child: Text('Page 1')),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    tester.state<NavigatorState>(find.byType(Navigator)).push(
+      CupertinoPageRoute<void>(
+        builder: (BuildContext context) => const Center(child: Text('Page 2')),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Page 1'), findsNothing);
+    expect(find.text('Page 2'), isOnstage);
+
+    // Now drag from the left edge.
+    final TestGesture gesture = await tester.startGesture(const Offset(765.0, 200.0));
+    await gesture.moveBy(const Offset(-300.0, 0.0));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // Page 1 is now visible.
+    expect(find.text('Page 1'), isOnstage);
+    expect(find.text('Page 2'), isOnstage);
+  });
+
   testWidgets('test only edge swipes work (RTL)', (WidgetTester tester) async {
     await tester.pumpWidget(
       CupertinoApp(
@@ -277,7 +375,7 @@ void main() {
             builder: (BuildContext context) {
               final String pageNumber = settings.name == '/' ? '1' : '2';
               return Center(child: Text('Page $pageNumber'));
-            }
+            },
           );
         },
       ),
@@ -287,7 +385,7 @@ void main() {
     tester.state<NavigatorState>(find.byType(Navigator)).pushNamed('/next');
 
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
 
     // Page 2 covers page 1.
     expect(find.text('Page 1'), findsNothing);
@@ -329,6 +427,54 @@ void main() {
     expect(find.text('Page 1'), isOnstage);
     expect(find.text('Page 2'), isOnstage);
   });
+
+  testWidgets('test edge swipe then drop back at starting point works', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        onGenerateRoute: (RouteSettings settings) {
+          return CupertinoPageRoute<void>(
+            settings: settings,
+            builder: (BuildContext context) {
+              final String pageNumber = settings.name == '/' ? '1' : '2';
+              return Center(child: Text('Page $pageNumber'));
+            },
+          );
+        },
+      ),
+    );
+
+    tester.state<NavigatorState>(find.byType(Navigator)).pushNamed('/next');
+
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Page 1'), findsNothing);
+    expect(find.text('Page 2'), isOnstage);
+
+    final TestGesture gesture = await tester.startGesture(const Offset(5, 200));
+    await gesture.moveBy(const Offset(300, 0));
+    await tester.pump();
+    // Bring it exactly back such that there's nothing to animate when releasing.
+    await gesture.moveBy(const Offset(-300, 0));
+    await gesture.up();
+    await tester.pump();
+
+    expect(find.text('Page 1'), findsNothing);
+    expect(find.text('Page 2'), isOnstage);
+  });
+
+  testWidgets('CupertinoPage does not lose its state when transitioning out', (WidgetTester tester) async {
+    final GlobalKey<NavigatorState> navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(KeepsStateTestWidget(navigatorKey: navigator));
+    expect(find.text('subpage'), findsOneWidget);
+    expect(find.text('home'), findsNothing);
+
+    navigator.currentState!.pop();
+    await tester.pump();
+
+    expect(find.text('subpage'), findsOneWidget);
+    expect(find.text('home'), findsOneWidget);
+  });
 }
 
 class RtlOverrideWidgetsDelegate extends LocalizationsDelegate<WidgetsLocalizations> {
@@ -345,4 +491,39 @@ class RtlOverrideWidgetsLocalization implements WidgetsLocalizations {
   const RtlOverrideWidgetsLocalization();
   @override
   TextDirection get textDirection => TextDirection.rtl;
+}
+
+class KeepsStateTestWidget extends StatefulWidget {
+  const KeepsStateTestWidget({Key? key, this.navigatorKey}) : super(key: key);
+
+  final Key? navigatorKey;
+
+  @override
+  State<KeepsStateTestWidget> createState() => _KeepsStateTestWidgetState();
+}
+
+class _KeepsStateTestWidgetState extends State<KeepsStateTestWidget> {
+  String? _subpage = 'subpage';
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoApp(
+      home: Navigator(
+        key: widget.navigatorKey,
+        pages: <Page<void>>[
+          const CupertinoPage<void>(child: Text('home')),
+          if (_subpage != null) CupertinoPage<void>(child: Text(_subpage!)),
+        ],
+        onPopPage: (Route<dynamic> route, dynamic result) {
+          if (!route.didPop(result)) {
+            return false;
+          }
+          setState(() {
+            _subpage = null;
+          });
+          return true;
+        },
+      ),
+    );
+  }
 }

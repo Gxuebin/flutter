@@ -1,11 +1,10 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'dart:ui';
 
 import 'package:flutter/rendering.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/widgets.dart';
 
@@ -16,7 +15,7 @@ void main() {
     final SemanticsTester semantics = SemanticsTester(tester);
 
     final List<Widget> listChildren = List<Widget>.generate(30, (int i) {
-      return Container(
+      return SizedBox(
         height: 200.0,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -65,6 +64,9 @@ void main() {
                   TestSemantics(
                     scrollIndex: 15,
                     scrollChildren: 30,
+                    flags: <SemanticsFlag>[
+                      SemanticsFlag.hasImplicitScrolling,
+                    ],
                     actions: <SemanticsAction>[
                       SemanticsAction.scrollUp,
                       SemanticsAction.scrollDown,
@@ -98,7 +100,7 @@ void main() {
                             label: 'item 14b',
                             textDirection: TextDirection.ltr,
                           ),
-                        ]
+                        ],
                       ),
                       TestSemantics(
                         children: <TestSemantics>[
@@ -187,7 +189,7 @@ void main() {
     final SemanticsTester semantics = SemanticsTester(tester);
 
     final List<Widget> listChildren = List<Widget>.generate(30, (int i) {
-      return Container(
+      return SizedBox(
         height: 200.0,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -234,6 +236,9 @@ void main() {
               TestSemantics(
                 children: <TestSemantics>[
                   TestSemantics(
+                    flags: <SemanticsFlag>[
+                      SemanticsFlag.hasImplicitScrolling,
+                    ],
                     actions: <SemanticsAction>[
                       SemanticsAction.scrollUp,
                       SemanticsAction.scrollDown,
@@ -324,7 +329,7 @@ void main() {
     final SemanticsTester semantics = SemanticsTester(tester);
 
     final List<Widget> listChildren = List<Widget>.generate(30, (int i) {
-      return Container(
+      return SizedBox(
         height: 200.0,
         child: Text('Item $i'),
       );
@@ -360,8 +365,13 @@ void main() {
               TestSemantics(
                 children: <TestSemantics>[
                   TestSemantics(
-                    actions: <SemanticsAction>[SemanticsAction.scrollUp,
-                    SemanticsAction.scrollDown],
+                    flags: <SemanticsFlag>[
+                      SemanticsFlag.hasImplicitScrolling,
+                    ],
+                    actions: <SemanticsAction>[
+                      SemanticsAction.scrollUp,
+                      SemanticsAction.scrollDown,
+                    ],
                     children: <TestSemantics>[
                       TestSemantics(
                         flags: <SemanticsFlag>[SemanticsFlag.isHidden],
@@ -449,7 +459,7 @@ void main() {
 
     final List<Widget> listChildren = List<Widget>.generate(30, (int i) {
       return SliverToBoxAdapter(
-        child: Container(
+        child: SizedBox(
           height: 200.0,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -492,6 +502,9 @@ void main() {
               TestSemantics(
                 children: <TestSemantics>[
                   TestSemantics(
+                    flags: <SemanticsFlag>[
+                      SemanticsFlag.hasImplicitScrolling,
+                    ],
                     actions: <SemanticsAction>[
                       SemanticsAction.scrollUp,
                       SemanticsAction.scrollDown,
@@ -582,7 +595,7 @@ void main() {
     final SemanticsTester semantics = SemanticsTester(tester);
 
     final List<Widget> listChildren = List<Widget>.generate(30, (int i) {
-      return Container(
+      return SizedBox(
         height: 200.0,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -624,6 +637,9 @@ void main() {
             textDirection: TextDirection.ltr,
             children: <TestSemantics>[
               TestSemantics(
+                flags: <SemanticsFlag>[
+                  SemanticsFlag.hasImplicitScrolling,
+                ],
                 actions: <SemanticsAction>[
                   SemanticsAction.scrollUp,
                   SemanticsAction.scrollDown,
@@ -726,7 +742,7 @@ void main() {
                   final int item = i - 15;
                   return SliverToBoxAdapter(
                     key: ValueKey<int>(item),
-                    child: Container(
+                    child: SizedBox(
                       height: 200.0,
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -760,6 +776,9 @@ void main() {
               TestSemantics(
                 children: <TestSemantics>[
                   TestSemantics(
+                    flags: <SemanticsFlag>[
+                      SemanticsFlag.hasImplicitScrolling,
+                    ],
                     actions: <SemanticsAction>[
                       SemanticsAction.scrollUp,
                       SemanticsAction.scrollDown,

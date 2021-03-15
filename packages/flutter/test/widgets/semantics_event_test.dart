@@ -1,4 +1,4 @@
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -27,24 +27,24 @@ void main() {
   test('SemanticsEvent.toMap', () {
     expect(
       TestSemanticsEvent(text: 'hi', number: 11).toMap(),
-      <String, dynamic> {
+      <String, dynamic>{
         'type': 'TestEvent',
-        'data': <String, dynamic> {
+        'data': <String, dynamic>{
           'text': 'hi',
-          'number': 11
-        }
-      }
+          'number': 11,
+        },
+      },
     );
     expect(
       TestSemanticsEvent(text: 'hi', number: 11).toMap(nodeId: 123),
-      <String, dynamic> {
+      <String, dynamic>{
         'type': 'TestEvent',
         'nodeId': 123,
-        'data': <String, dynamic> {
+        'data': <String, dynamic>{
           'text': 'hi',
-          'number': 11
-        }
-      }
+          'number': 11,
+        },
+      },
     );
   });
 }
@@ -52,8 +52,8 @@ void main() {
 class TestSemanticsEvent extends SemanticsEvent {
   TestSemanticsEvent({ this.text, this.number }) : super('TestEvent');
 
-  final String text;
-  final int number;
+  final String? text;
+  final int? number;
 
   @override
   Map<String, dynamic> getDataMap() {

@@ -1,4 +1,4 @@
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,9 +9,9 @@ import 'route.dart';
 
 /// A single tab view with its own [Navigator] state and history.
 ///
-/// A typical tab view used as the content of each tab in a [CupertinoTabScaffold]
-/// where multiple tabs with parallel navigation states and history can
-/// co-exist.
+/// A typical tab view is used as the content of each tab in a
+/// [CupertinoTabScaffold] where multiple tabs with parallel navigation states
+/// and history can co-exist.
 ///
 /// [CupertinoTabView] configures the top-level [Navigator] to search for routes
 /// in the following order:
@@ -41,13 +41,15 @@ import 'route.dart';
 class CupertinoTabView extends StatefulWidget {
   /// Creates the content area for a tab in a [CupertinoTabScaffold].
   const CupertinoTabView({
-    Key key,
+    Key? key,
     this.builder,
+    this.navigatorKey,
     this.defaultTitle,
     this.routes,
     this.onGenerateRoute,
     this.onUnknownRoute,
     this.navigatorObservers = const <NavigatorObserver>[],
+    this.restorationScopeId,
   }) : assert(navigatorObservers != null),
        super(key: key);
 
@@ -56,10 +58,32 @@ class CupertinoTabView extends StatefulWidget {
   ///
   /// If a [builder] is specified, then [routes] must not include an entry for `/`,
   /// as [builder] takes its place.
-  final WidgetBuilder builder;
+  ///
+  /// Rebuilding a [CupertinoTabView] with a different [builder] will not clear
+  /// its current navigation stack or update its descendant. Instead, trigger a
+  /// rebuild from a descendant in its subtree. This can be done via methods such
+  /// as:
+  ///
+  ///  * Calling [State.setState] on a descendant [StatefulWidget]'s [State]
+  ///  * Modifying an [InheritedWidget] that a descendant registered itself
+  ///    as a dependent to.
+  final WidgetBuilder? builder;
+
+  /// A key to use when building this widget's [Navigator].
+  ///
+  /// If a [navigatorKey] is specified, the [Navigator] can be directly
+  /// manipulated without first obtaining it from a [BuildContext] via
+  /// [Navigator.of]: from the [navigatorKey], use the [GlobalKey.currentState]
+  /// getter.
+  ///
+  /// If this is changed, a new [Navigator] will be created, losing all the
+  /// tab's state in the process; in that case, the [navigatorObservers]
+  /// must also be changed, since the previous observers will be attached to the
+  /// previous navigator.
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   /// The title of the default route.
-  final String defaultTitle;
+  final String? defaultTitle;
 
   /// This tab view's routing table.
   ///
@@ -80,12 +104,12 @@ class CupertinoTabView extends StatefulWidget {
   ///
   /// This routing table is not shared with any routing tables of ancestor or
   /// descendant [Navigator]s.
-  final Map<String, WidgetBuilder> routes;
+  final Map<String, WidgetBuilder>? routes;
 
   /// The route generator callback used when the tab view is navigated to a named route.
   ///
   /// This is used if [routes] does not contain the requested route.
-  final RouteFactory onGenerateRoute;
+  final RouteFactory? onGenerateRoute;
 
   /// Called when [onGenerateRoute] also fails to generate a route.
   ///
@@ -95,12 +119,18 @@ class CupertinoTabView extends StatefulWidget {
   ///
   /// The default implementation pushes a route that displays an ugly error
   /// message.
-  final RouteFactory onUnknownRoute;
+  final RouteFactory? onUnknownRoute;
 
   /// The list of observers for the [Navigator] created in this tab view.
   ///
   /// This list of observers is not shared with ancestor or descendant [Navigator]s.
   final List<NavigatorObserver> navigatorObservers;
+
+  /// Restoration ID to save and restore the state of the [Navigator] built by
+  /// this [CupertinoTabView].
+  ///
+  /// {@macro flutter.widgets.navigator.restorationScopeId}
+  final String? restorationScopeId;
 
   @override
   _CupertinoTabViewState createState() {
@@ -109,8 +139,8 @@ class CupertinoTabView extends StatefulWidget {
 }
 
 class _CupertinoTabViewState extends State<CupertinoTabView> {
-  HeroController _heroController;
-  List<NavigatorObserver> _navigatorObservers;
+  late HeroController _heroController;
+  late List<NavigatorObserver> _navigatorObservers;
 
   @override
   void initState() {
@@ -120,9 +150,12 @@ class _CupertinoTabViewState extends State<CupertinoTabView> {
   }
 
   @override
-   void didUpdateWidget(CupertinoTabView oldWidget) {
-     super.didUpdateWidget(oldWidget);
-     _updateObservers();
+  void didUpdateWidget(CupertinoTabView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.navigatorKey != oldWidget.navigatorKey
+        || widget.navigatorObservers != oldWidget.navigatorObservers) {
+      _updateObservers();
+    }
   }
 
   void _updateObservers() {
@@ -134,22 +167,24 @@ class _CupertinoTabViewState extends State<CupertinoTabView> {
   @override
   Widget build(BuildContext context) {
     return Navigator(
+      key: widget.navigatorKey,
       onGenerateRoute: _onGenerateRoute,
       onUnknownRoute: _onUnknownRoute,
       observers: _navigatorObservers,
+      restorationScopeId: widget.restorationScopeId,
     );
   }
 
-  Route<dynamic> _onGenerateRoute(RouteSettings settings) {
-    final String name = settings.name;
-    WidgetBuilder routeBuilder;
-    String title;
+  Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
+    final String? name = settings.name;
+    WidgetBuilder? routeBuilder;
+    String? title;
     if (name == Navigator.defaultRouteName && widget.builder != null) {
       routeBuilder = widget.builder;
       title = widget.defaultTitle;
+    } else if (widget.routes != null) {
+      routeBuilder = widget.routes![name];
     }
-    else if (widget.routes != null)
-      routeBuilder = widget.routes[name];
     if (routeBuilder != null) {
       return CupertinoPageRoute<dynamic>(
         builder: routeBuilder,
@@ -158,11 +193,11 @@ class _CupertinoTabViewState extends State<CupertinoTabView> {
       );
     }
     if (widget.onGenerateRoute != null)
-      return widget.onGenerateRoute(settings);
+      return widget.onGenerateRoute!(settings);
     return null;
   }
 
-  Route<dynamic> _onUnknownRoute(RouteSettings settings) {
+  Route<dynamic>? _onUnknownRoute(RouteSettings settings) {
     assert(() {
       if (widget.onUnknownRoute == null) {
         throw FlutterError(
@@ -179,7 +214,7 @@ class _CupertinoTabViewState extends State<CupertinoTabView> {
       }
       return true;
     }());
-    final Route<dynamic> result = widget.onUnknownRoute(settings);
+    final Route<dynamic>? result = widget.onUnknownRoute!(settings);
     assert(() {
       if (result == null) {
         throw FlutterError(

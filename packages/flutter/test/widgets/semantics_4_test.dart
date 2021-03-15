@@ -1,10 +1,9 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'semantics_tester.dart';
@@ -70,10 +69,10 @@ void main() {
                 flags: SemanticsFlag.hasCheckedState.index,
                 rect: TestSemantics.fullScreen,
               ),
-            ]
+            ],
           ),
         ],
-      )
+      ),
     ));
 
     //    O        O=root
@@ -122,7 +121,7 @@ void main() {
             rect: TestSemantics.fullScreen,
           ),
         ],
-      )
+      ),
     ));
 
     //             O=root
@@ -162,7 +161,7 @@ void main() {
             rect: TestSemantics.fullScreen,
           ),
         ],
-      )
+      ),
     ));
 
     semantics.dispose();

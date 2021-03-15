@@ -1,4 +1,4 @@
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -57,18 +57,18 @@ void main() {
     expect(border3.dimensions, const EdgeInsets.symmetric(horizontal: 1.0, vertical: 1.0));
     expect(border3.isUniform, isFalse);
     expect(border3.scale(0.0), TableBorder.symmetric(
-      inside: const BorderSide(width: 0.0, style: BorderStyle.none),
+      inside: BorderSide.none,
       outside: const BorderSide(width: 0.0, color: Color(0xFFFF0000), style: BorderStyle.none),
     ));
   });
 
   test('TableBorder.lerp', () {
-    const BorderSide side1 = BorderSide(width: 1.0, color: Color(1));
-    const BorderSide side2 = BorderSide(width: 2.0, color: Color(2));
-    const BorderSide side3 = BorderSide(width: 3.0, color: Color(3));
-    const BorderSide side4 = BorderSide(width: 4.0, color: Color(4));
-    const BorderSide side5 = BorderSide(width: 5.0, color: Color(5));
-    const BorderSide side6 = BorderSide(width: 6.0, color: Color(6));
+    const BorderSide side1 = BorderSide(width: 1.0, color: Color(0x00000001));
+    const BorderSide side2 = BorderSide(width: 2.0, color: Color(0x00000002));
+    const BorderSide side3 = BorderSide(width: 3.0, color: Color(0x00000003));
+    const BorderSide side4 = BorderSide(width: 4.0, color: Color(0x00000004));
+    const BorderSide side5 = BorderSide(width: 5.0, color: Color(0x00000005));
+    const BorderSide side6 = BorderSide(width: 6.0, color: Color(0x00000006));
     const TableBorder tableA = TableBorder(
       top: side1,
       right: side2,
@@ -102,8 +102,8 @@ void main() {
     expect(TableBorder.lerp(tableA, tableC, 0.5), tableB);
     expect(TableBorder.lerp(tableA, tableB, 2.0), tableC);
     expect(TableBorder.lerp(tableB, tableC, -1.0), tableA);
-    expect(TableBorder.lerp(tableA, tableC, 0.9195).isUniform, isFalse);
-    expect(TableBorder.lerp(tableA, tableC, 0.9195).dimensions,
+    expect(TableBorder.lerp(tableA, tableC, 0.9195)!.isUniform, isFalse);
+    expect(TableBorder.lerp(tableA, tableC, 0.9195)!.dimensions,
            EdgeInsets.lerp(tableA.dimensions, tableC.dimensions, 0.9195));
   });
 

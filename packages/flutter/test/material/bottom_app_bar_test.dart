@@ -1,4 +1,4 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -17,7 +17,7 @@ void main() {
           bottomNavigationBar: ShapeListener(
             BottomAppBar(
               child: SizedBox(height: 100.0),
-            )
+            ),
           ),
         ),
       ),
@@ -34,9 +34,53 @@ void main() {
       coversSameAreaAs(
         expectedPath,
         areaToCompare: (Offset.zero & renderBox.size).inflate(5.0),
-      )
+      ),
     );
   });
+
+  testWidgets('custom shape', (WidgetTester tester) async {
+    final Key key = UniqueKey();
+    Future<void> pump(FloatingActionButtonLocation location) async {
+      await tester.pumpWidget(
+        SizedBox(
+          width: 200,
+          height: 200,
+          child: RepaintBoundary(
+            key: key,
+            child: MaterialApp(
+              home: Scaffold(
+                floatingActionButton: FloatingActionButton(
+                  onPressed: () { },
+                ),
+                floatingActionButtonLocation: location,
+                bottomNavigationBar: BottomAppBar(
+                  shape: AutomaticNotchedShape(
+                    BeveledRectangleBorder(borderRadius: BorderRadius.circular(50.0)),
+                    ContinuousRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+                  ),
+                  notchMargin: 10.0,
+                  color: Colors.green,
+                  child: const SizedBox(height: 100.0),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    await pump(FloatingActionButtonLocation.endDocked);
+    await expectLater(
+      find.byKey(key),
+      matchesGoldenFile('bottom_app_bar.custom_shape.1.png'),
+    );
+    await pump(FloatingActionButtonLocation.centerDocked);
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byKey(key),
+      matchesGoldenFile('bottom_app_bar.custom_shape.2.png'),
+    );
+  }, skip: isBrowser); // https://github.com/flutter/flutter/issues/51675,
+  // https://github.com/flutter/flutter/issues/44572
 
   testWidgets('color defaults to Theme.bottomAppBarColor', (WidgetTester tester) async {
     await tester.pumpWidget(
@@ -90,9 +134,27 @@ void main() {
     expect(physicalShape.color, const Color(0xff0000ff));
   });
 
+  testWidgets('dark theme applies an elevation overlay color', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.from(colorScheme: const ColorScheme.dark()),
+        home: Scaffold(
+          bottomNavigationBar: BottomAppBar(
+            color: const ColorScheme.dark().surface,
+          ),
+        ),
+      )
+    );
+
+    final PhysicalShape physicalShape = tester.widget(find.byType(PhysicalShape).at(0));
+
+    // For the default dark theme the overlay color for elevation 8 is 0xFF2D2D2D
+    expect(physicalShape.color, const Color(0xFF2D2D2D));
+  });
+
   // This is a regression test for a bug we had where toggling the notch on/off
   // would crash, as the shouldReclip method of ShapeBorderClipper or
-  // _BottomAppBarClipper will try an illegal downcast.
+  // _BottomAppBarClipper would try an illegal downcast.
   testWidgets('toggle shape to null', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
@@ -153,7 +215,7 @@ void main() {
       coversSameAreaAs(
         expectedPath,
         areaToCompare: (Offset.zero & renderBox.size).inflate(5.0),
-      )
+      ),
     );
   });
 
@@ -166,7 +228,7 @@ void main() {
               child: SizedBox(height: 100.0),
               shape: RectangularNotch(),
               notchMargin: 0.0,
-            )
+            ),
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: null,
@@ -205,7 +267,7 @@ void main() {
       coversSameAreaAs(
         expectedPath,
         areaToCompare: (Offset.zero & babSize).inflate(5.0),
-      )
+      ),
     );
   });
 
@@ -218,7 +280,7 @@ void main() {
               child: SizedBox(height: 100.0),
               shape: RectangularNotch(),
               notchMargin: 6.0,
-            )
+            ),
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: null,
@@ -257,7 +319,7 @@ void main() {
       coversSameAreaAs(
         expectedPath,
         areaToCompare: (Offset.zero & babSize).inflate(5.0),
-      )
+      ),
     );
   });
 
@@ -323,27 +385,27 @@ void main() {
 
 // The bottom app bar clip path computation is only available at paint time.
 // In order to examine the notch path we implement this caching painter which
-// at paint time looks for for a descendant PhysicalShape and caches the
+// at paint time looks for a descendant PhysicalShape and caches the
 // clip path it is using.
 class ClipCachePainter extends CustomPainter {
   ClipCachePainter(this.context);
 
-  Path value;
+  late Path value;
   BuildContext context;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final RenderPhysicalShape physicalShape = findPhysicalShapeChild(context);
-    value = physicalShape.clipper.getClip(size);
+    final RenderPhysicalShape physicalShape = findPhysicalShapeChild(context)!;
+    value = physicalShape.clipper!.getClip(size);
   }
 
-  RenderPhysicalShape findPhysicalShapeChild(BuildContext context) {
-    RenderPhysicalShape result;
+  RenderPhysicalShape? findPhysicalShapeChild(BuildContext context) {
+    RenderPhysicalShape? result;
     context.visitChildElements((Element e) {
-      final RenderObject renderObject = e.findRenderObject();
+      final RenderObject renderObject = e.findRenderObject()!;
       if (renderObject.runtimeType == RenderPhysicalShape) {
         assert(result == null);
-        result = renderObject;
+        result = renderObject as RenderPhysicalShape;
       } else {
         result = findPhysicalShapeChild(e);
       }
@@ -358,7 +420,7 @@ class ClipCachePainter extends CustomPainter {
 }
 
 class ShapeListener extends StatefulWidget {
-  const ShapeListener(this.child);
+  const ShapeListener(this.child, { Key? key }) : super(key: key);
 
   final Widget child;
 
@@ -372,11 +434,11 @@ class ShapeListenerState extends State<ShapeListener> {
   Widget build(BuildContext context) {
     return CustomPaint(
       child: widget.child,
-      painter: cache
+      painter: cache,
     );
   }
 
-  ClipCachePainter cache;
+  late ClipCachePainter cache;
 
   @override
   void didChangeDependencies() {
@@ -386,11 +448,13 @@ class ShapeListenerState extends State<ShapeListener> {
 
 }
 
-class RectangularNotch implements NotchedShape {
+class RectangularNotch extends NotchedShape {
   const RectangularNotch();
 
   @override
-  Path getOuterPath(Rect host, Rect guest) {
+  Path getOuterPath(Rect host, Rect? guest) {
+    if (guest == null)
+      return Path()..addRect(host);
     return Path()
       ..moveTo(host.left, host.top)
       ..lineTo(guest.left, host.top)
@@ -403,4 +467,3 @@ class RectangularNotch implements NotchedShape {
       ..close();
   }
 }
-

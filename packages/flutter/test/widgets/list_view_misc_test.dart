@@ -1,9 +1,8 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 const Key blockKey = Key('test');
@@ -15,10 +14,10 @@ void main() {
         textDirection: TextDirection.ltr,
         child: ListView(
           key: blockKey,
-          children: <Widget>[
-            Container(
+          children: const <Widget>[
+            SizedBox(
               height: 200.0, // less than 600, the height of the test area
-              child: const Text('Hello'),
+              child: Text('Hello'),
             ),
           ],
         ),
@@ -43,10 +42,10 @@ void main() {
         textDirection: TextDirection.ltr,
         child: ListView(
           key: blockKey,
-          children: <Widget>[
-            Container(
+          children: const <Widget>[
+            SizedBox(
               height: 2000.0, // more than 600, the height of the test area
-              child: const Text('Hello'),
+              child: Text('Hello'),
             ),
           ],
         ),
@@ -84,7 +83,7 @@ void main() {
               child: Container(
                 height: 350.0, // more than half the height of the test area
                 color: const Color(0xFF00FF00),
-              )
+              ),
             ),
             GestureDetector(
               onTap: () { second += 1; },
@@ -157,7 +156,7 @@ void main() {
       firstIndex: 3,
       lastIndex: 4,
       leadingScrollOffset: 25.0,
-      trailingScrollOffset: 26.0
+      trailingScrollOffset: 26.0,
     );
     expect(maxScrollOffset, equals(26.0));
   });
@@ -182,19 +181,19 @@ void main() {
                   SizedBox(
                     height: 150.0,
                     child: Center(
-                      child: Text('top')
+                      child: Text('top'),
                     ),
                   ),
                   SizedBox(
                     height: 200.0,
                     child: Center(
-                      child: Text('middle')
+                      child: Text('middle'),
                     ),
                   ),
                   SizedBox(
                     height: 150.0,
                     child: Center(
-                      child: Text('bottom')
+                      child: Text('bottom'),
                     ),
                   ),
                 ],
@@ -216,7 +215,7 @@ void main() {
     await tester.pumpWidget(buildFrame());
     expect(find.text('top'), findsOneWidget);
 
-    final ScrollPosition position = Scrollable.of(tester.element(find.text('middle'))).position;
+    final ScrollPosition position = Scrollable.of(tester.element(find.text('middle')))!.position;
     expect(position.viewportDimension, 600.0);
     expect(position.pixels, 0.0);
 

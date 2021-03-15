@@ -1,22 +1,23 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import '../rendering/src/sector_layout.dart';
 
-RenderBox initCircle() {
+RenderBoxToRenderSectorAdapter initCircle() {
   return RenderBoxToRenderSectorAdapter(
     innerRadius: 25.0,
-    child: RenderSectorRing(padding: 0.0)
+    child: RenderSectorRing(padding: 0.0),
   );
 }
 
 class SectorApp extends StatefulWidget {
+  const SectorApp({Key? key}) : super(key: key);
+
   @override
   SectorAppState createState() => SectorAppState();
 }
@@ -54,9 +55,9 @@ class SectorAppState extends State<SectorApp> {
     int index = 0;
     while (index < actualSectorSizes.length && index < wantedSectorSizes.length && actualSectorSizes[index] == wantedSectorSizes[index])
       index += 1;
-    final RenderSectorRing ring = sectors.child;
+    final RenderSectorRing ring = sectors.child! as RenderSectorRing;
     while (index < actualSectorSizes.length) {
-      ring.remove(ring.lastChild);
+      ring.remove(ring.lastChild!);
       actualSectorSizes.removeLast();
     }
     while (index < wantedSectorSizes.length) {
@@ -67,14 +68,14 @@ class SectorAppState extends State<SectorApp> {
     }
   }
 
-  static RenderBox initSector(Color color) {
+  static RenderBoxToRenderSectorAdapter initSector(Color color) {
     final RenderSectorRing ring = RenderSectorRing(padding: 1.0);
     ring.add(RenderSolidColor(const Color(0xFF909090), desiredDeltaTheta: kTwoPi * 0.15));
     ring.add(RenderSolidColor(const Color(0xFF909090), desiredDeltaTheta: kTwoPi * 0.15));
     ring.add(RenderSolidColor(color, desiredDeltaTheta: kTwoPi * 0.2));
     return RenderBoxToRenderSectorAdapter(
       innerRadius: 5.0,
-      child: ring
+      child: ring,
     );
   }
   RenderBoxToRenderSectorAdapter sectorAddIcon = initSector(const Color(0xFF00DD00));
@@ -96,7 +97,7 @@ class SectorAppState extends State<SectorApp> {
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 25.0),
           child: Row(
             children: <Widget>[
-              RaisedButton(
+              ElevatedButton(
                 onPressed: _enabledAdd ? addSector : null,
                 child: IntrinsicWidth(
                   child: Row(
@@ -104,14 +105,14 @@ class SectorAppState extends State<SectorApp> {
                       Container(
                         padding: const EdgeInsets.all(4.0),
                         margin: const EdgeInsets.only(right: 10.0),
-                        child: WidgetToRenderBoxAdapter(renderBox: sectorAddIcon)
+                        child: WidgetToRenderBoxAdapter(renderBox: sectorAddIcon),
                       ),
                       const Text('ADD SECTOR'),
-                    ]
-                  )
-                )
+                    ],
+                  ),
+                ),
               ),
-              RaisedButton(
+              ElevatedButton(
                 onPressed: _enabledRemove ? removeSector : null,
                 child: IntrinsicWidth(
                   child: Row(
@@ -119,16 +120,16 @@ class SectorAppState extends State<SectorApp> {
                       Container(
                         padding: const EdgeInsets.all(4.0),
                         margin: const EdgeInsets.only(right: 10.0),
-                        child: WidgetToRenderBoxAdapter(renderBox: sectorRemoveIcon)
+                        child: WidgetToRenderBoxAdapter(renderBox: sectorRemoveIcon),
                       ),
                       const Text('REMOVE SECTOR'),
-                    ]
-                  )
-                )
+                    ],
+                  ),
+                ),
               ),
             ],
-            mainAxisAlignment: MainAxisAlignment.spaceAround
-          )
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          ),
         ),
         Expanded(
           child: Container(
@@ -139,12 +140,12 @@ class SectorAppState extends State<SectorApp> {
             padding: const EdgeInsets.all(8.0),
             child: WidgetToRenderBoxAdapter(
               renderBox: sectors,
-              onBuild: doUpdates
-            )
-          )
+              onBuild: doUpdates,
+            ),
+          ),
         ),
       ],
-      mainAxisAlignment: MainAxisAlignment.spaceBetween
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
     );
   }
 
@@ -155,14 +156,14 @@ class SectorAppState extends State<SectorApp> {
       title: 'Sector Layout',
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Sector Layout in a Widget Tree')
+          title: const Text('Sector Layout in a Widget Tree'),
         ),
-        body: buildBody()
-      )
+        body: buildBody(),
+      ),
     );
   }
 }
 
 void main() {
-  runApp(SectorApp());
+  runApp(const SectorApp());
 }

@@ -1,4 +1,4 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,14 +6,14 @@ import 'package:flutter/material.dart';
 
 class _GesturePainter extends CustomPainter {
   const _GesturePainter({
-    this.zoom,
-    this.offset,
-    this.swatch,
-    this.forward,
-    this.scaleEnabled,
-    this.tapEnabled,
-    this.doubleTapEnabled,
-    this.longPressEnabled
+    required this.zoom,
+    required this.offset,
+    required this.swatch,
+    required this.forward,
+    required this.scaleEnabled,
+    required this.tapEnabled,
+    required this.doubleTapEnabled,
+    required this.longPressEnabled,
   });
 
   final double zoom;
@@ -55,18 +55,20 @@ class _GesturePainter extends CustomPainter {
 }
 
 class GestureDemo extends StatefulWidget {
+  const GestureDemo({Key? key}) : super(key: key);
+
   @override
   GestureDemoState createState() => GestureDemoState();
 }
 
 class GestureDemoState extends State<GestureDemo> {
 
-  Offset _startingFocalPoint;
+  late Offset _startingFocalPoint;
 
-  Offset _previousOffset;
+  late Offset _previousOffset;
   Offset _offset = Offset.zero;
 
-  double _previousZoom;
+  late double _previousZoom;
   double _zoom = 1.0;
 
   static const List<MaterialColor> kSwatches = <MaterialColor>[
@@ -159,9 +161,9 @@ class GestureDemoState extends State<GestureDemo> {
               scaleEnabled: _scaleEnabled,
               tapEnabled: _tapEnabled,
               doubleTapEnabled: _doubleTapEnabled,
-              longPressEnabled: _longPressEnabled
-            )
-          )
+              longPressEnabled: _longPressEnabled,
+            ),
+          ),
         ),
         Positioned(
           bottom: 0.0,
@@ -175,45 +177,45 @@ class GestureDemoState extends State<GestureDemo> {
                     children: <Widget>[
                       Checkbox(
                         value: _scaleEnabled,
-                        onChanged: (bool value) { setState(() { _scaleEnabled = value; }); }
+                        onChanged: (bool? value) { setState(() { _scaleEnabled = value!; }); },
                       ),
                       const Text('Scale'),
-                    ]
+                    ],
                   ),
                   Row(
                     children: <Widget>[
                       Checkbox(
                         value: _tapEnabled,
-                        onChanged: (bool value) { setState(() { _tapEnabled = value; }); }
+                        onChanged: (bool? value) { setState(() { _tapEnabled = value!; }); },
                       ),
                       const Text('Tap'),
-                    ]
+                    ],
                   ),
                   Row(
                     children: <Widget>[
                       Checkbox(
                         value: _doubleTapEnabled,
-                        onChanged: (bool value) { setState(() { _doubleTapEnabled = value; }); }
+                        onChanged: (bool? value) { setState(() { _doubleTapEnabled = value!; }); },
                       ),
                       const Text('Double Tap'),
-                    ]
+                    ],
                   ),
                   Row(
                     children: <Widget>[
                       Checkbox(
                         value: _longPressEnabled,
-                        onChanged: (bool value) { setState(() { _longPressEnabled = value; }); }
+                        onChanged: (bool? value) { setState(() { _longPressEnabled = value!; }); },
                       ),
                       const Text('Long Press'),
-                    ]
+                    ],
                   ),
                 ],
-                crossAxisAlignment: CrossAxisAlignment.start
-              )
-            )
-          )
+                crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+            ),
+          ),
         ),
-      ]
+      ],
     );
   }
 }
@@ -223,7 +225,7 @@ void main() {
     theme: ThemeData.dark(),
     home: Scaffold(
       appBar: AppBar(title: const Text('Gestures Demo')),
-      body: GestureDemo()
-    )
+      body: const GestureDemo(),
+    ),
   ));
 }
